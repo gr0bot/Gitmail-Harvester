@@ -58,12 +58,19 @@ if r1.status_code == 200:
         r2 = requests.get('https://api.github.com/repos/' + args.url + '/' + repos_lst[i] + '/commits')
         if r2.status_code == 200:
             r2_json = r2.json()
-            # Recuperer les email
-            #for y in r2_json:
-            #    email_lst.append(r2_json[y]["commit"]["author"]["email"])
             for y in r2_json:
                 email = y["commit"]["author"]["email"]
                 email_lst.append(email)
-    print(email_lst)
+
+    # Retirer les doublons en convertissant la liste en set
+    email_lst_filter = set(email_lst)
+    # Reconvertir le set en liste
+    email_lst = list(email_lst_filter)
+    # Trier la liste par ordre alphabétique
+    email_lst.sort()
+    # Retirer les addresses users.noreply.github
+    email_lst_finale = [element for element in email_lst if "noreply.github" not in element]
+    
+    print(email_lst_finale)
 else:
     print("Impossible de récupérer les repos.")
