@@ -59,9 +59,11 @@ if r1.status_code == 200:
         if r2.status_code == 200:
             r2_json = r2.json()
             # Recuperer les email
+            #for y in r2_json:
+            #    email_lst.append(r2_json[y]["commit"]["author"]["email"])
             for y in r2_json:
-                email_lst.append(r2_json[y]["commit"]["author"]["email"])
-
+                email = y["commit"]["author"]["email"]
+                email_lst.append(email)
     print(email_lst)
 else:
     print("Impossible de récupérer les repos.")
