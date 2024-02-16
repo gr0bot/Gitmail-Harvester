@@ -12,7 +12,7 @@ random_str = ''.join(random.choice(string.ascii_lowercase) for i in range(7))
 #q = Queue()
 def pop_err(text):
     print("{}{}{} {}".format(red, "[!]", reset, text))
-    exit()
+    #exit()
 def pop_dbg(text):
     print("{}{}{} {}".format(cyan, "[i]", reset, text))
 def pop_info(text):
@@ -42,7 +42,7 @@ def get_repos(service, name, entity_type, token):
         headers = {'Authorization': f'token {token}'} if token else {}
         response = requests.get(api_url)
         if response.status_code == 403:
-            print("API rate limit exceeded. repos")
+            pop_err("API rate limit exceeded. repos")
             return []
         if response.status_code == 200:
             repos_data = response.json()
@@ -52,7 +52,7 @@ def get_repos(service, name, entity_type, token):
         # Ajoutez la logique pour GitLab ici
         pass
     else:
-        raise ValueError("Service not supported")
+        raise pop_info("Service not supported")
     print(response.json())  # Add this in your get_repos and get_commits functions
     return repos
 
@@ -68,7 +68,7 @@ def get_commits(service, name, repo_name, token):
         headers = {'Authorization': f'token {token}'} if token else {}
         response = requests.get(api_url)
         if response.status_code == 403:
-            print("API rate limit exceeded. commits")
+            pop_err("API rate limit exceeded. commits")
             return []
         if response.status_code == 200:
             commits_data = response.json()
@@ -80,6 +80,7 @@ def get_commits(service, name, repo_name, token):
         # Ajoutez la logique pour GitLab ici
         pass
     else:
+        pop_info("Service not yet functional")
         raise ValueError("Service not supported")
     print(response.json())  # Add this in your get_repos and get_commits functions
     return commits
@@ -139,9 +140,10 @@ def main():
     # Eliminate duplicates
     unique_commiters = deduplicate_commiters(commiters)
     if unique_commiters:
-       print("Writing the following data to the file:", unique_commiters)
+       pop_valid("Writing the following data to the file")
+       print(unique_commiters)
     else:
-       pop_err(print("No data to write to the file."))
+       pop_err("No data to write to the file.")
 
     # Output results to the specified file format
     if args.list == 'all':
@@ -156,7 +158,8 @@ def main():
             for commiter in unique_commiters:
                 print(f"{commiter['name']}: {commiter['email']}")
 
-    pop_valid(print(f"Data has been written to {args.outputFile}"))
+    print(f"Data has been written to {args.outputFile}")
+    pop_valid("Data correctly writen to output file ");
 
 if __name__ == '__main__':
     main()
