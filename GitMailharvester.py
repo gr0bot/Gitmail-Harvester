@@ -29,15 +29,12 @@ def log_to_file(line):
 
 # Fonction pour récupérer les dépôts de l'utilisateur ou de l'organisation
 def get_repos(service, name, entity_type, token):
-    # Code simulé pour récupérer les dépôts (doit être remplacé par l'appel API réel)
-    # Assurez-vous de renvoyer une liste vide si l'appel API échoue ou si aucun dépôt n'est trouvé
+    
     repos = []
     headers = {}
     
     if service == 'github':
-        # Simule une URL de l'API GitHub pour récupérer les dépôts d'un utilisateur
-        #api_url = f'https://api.github.com/users/{name}/repos' if entity_type == 'user' else f'https://api.github.com/orgs/{name}/repos'
-        #response = requests.get(api_url)
+        
         api_url = f'https://api.github.com/users/{name}/repos' if entity_type == 'user' else f'https://api.github.com/orgs/{name}/repos'
         headers = {'Authorization': f'token {token}'} if token else {}
         response = requests.get(api_url)
@@ -56,14 +53,13 @@ def get_repos(service, name, entity_type, token):
     print(response.json())  # Add this in your get_repos and get_commits functions
     return repos
 
-# Reste du code...
+
 
 # Fonction pour récupérer les commits d'un dépôt
 def get_commits(service, name, repo_name, token):
     commits = []
     headers = {}
     if service == 'github':
-        # Simule une URL de l'API GitHub pour récupérer les commits d'un dépôt
         api_url = f'https://api.github.com/repos/{name}/{repo_name}/commits'
         headers = {'Authorization': f'token {token}'} if token else {}
         response = requests.get(api_url)
