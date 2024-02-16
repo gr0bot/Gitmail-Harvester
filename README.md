@@ -21,22 +21,22 @@ Git Email Harvester is a powerful Osint/Red Team and Pentest tool designed to ex
 Clone this repository to your local machine using:
 
 ```bash
-git clone https://your-repository-url.git
-cd git-email-harvester
+git clone https://github.com/gr0bot/Gitmail-Harvester/
+cd Gitmail-Harvester
 ```
 Ensure you have Python 3 installed, and then install the required Python packages:
 
-bash
+```bash
 
 pip install -r requirements.txt
-
+```
 ## Usage
 
 The tool can be executed from the command line with various options to specify the target platform, username or organization, and output format.
 Basic Syntax
 
 ```bash 
-    python git_email_harvester.py [OPTIONS]
+    python GitMailharvester.py [OPTIONS]
 ```
 
 Options
@@ -56,14 +56,14 @@ Extract all committers from a GitHub user's repositories and output to committer
 
 ```bash
 
-python git_email_harvester.py -H github -u username --list all -oA csv -oF committers.csv --github-token YOUR_GITHUB_TOKEN 
+python GitMailharvester.py -H github -u username --list all -oA csv -oF committers.csv --github-token YOUR_GITHUB_TOKEN 
 ```
 
 Extract all committers from a GitLab organization's repositories and output to committers.json:
 
 ```bash
 
-python git_email_harvester.py -H gitlab -o organisation_name --list all -oA json -oF committers.json --gitlab-token YOUR_GITLAB_TOKEN
+python GitMailharvester.py -H gitlab -o organisation_name --list all -oA json -oF committers.json --gitlab-token YOUR_GITLAB_TOKEN
 ```
 ### Notes
 
