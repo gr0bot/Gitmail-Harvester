@@ -43,6 +43,19 @@ def log_to_file(line):
     f.close()
     pass
 
+def make_api_call(url, headers=None):
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 403:
+            pop_err("API rate limit exceeded.")
+        elif response.status_code == 200:
+            return response.json()
+        else:
+            pop_err(f"Failed to access {url} with status code: {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        pop_err(f"Request failed: {e}")
+    return None
+
 
 
 
