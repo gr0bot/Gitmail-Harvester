@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+# File name          : gitmailharvester.py
+# Author             : bl4ckarch & gr0bot
+# Date created       : 
+
+
 import sys
 import random
 import string
@@ -12,7 +18,7 @@ random_str = ''.join(random.choice(string.ascii_lowercase) for i in range(7))
 #q = Queue()
 def pop_err(text):
     print("{}{}{} {}".format(red, "[!]", reset, text))
-    #exit()
+    exit()
 def pop_dbg(text):
     print("{}{}{} {}".format(cyan, "[i]", reset, text))
 def pop_info(text):
@@ -20,9 +26,10 @@ def pop_info(text):
 def pop_valid(text):
     print("{}{}{} {}".format(green, "[+]", reset, text))
 def log_to_file(line):
-    f = open(f'./{output_name}.txt', 'a')
-    f.write(line); f.write("\n")
-    f.close()
+    #f = open(f'./{output_name}.txt', 'a')
+    #f.write(line); f.write("\n")
+    #f.close()
+    pass
 
 
 
@@ -31,7 +38,7 @@ def log_to_file(line):
 def get_repos(service, name, entity_type, token):
     
     repos = []
-    headers = {}
+    headers = {}    
     
     if service == 'github':
         
@@ -50,7 +57,7 @@ def get_repos(service, name, entity_type, token):
         pass
     else:
         raise pop_info("Service not supported")
-    print(response.json())  # Add this in your get_repos and get_commits functions
+    #print(response.json())  # Add this in your get_repos and get_commits functions
     return repos
 
 
@@ -78,7 +85,7 @@ def get_commits(service, name, repo_name, token):
     else:
         pop_info("Service not yet functional")
         raise ValueError("Service not supported")
-    print(response.json())  # Add this in your get_repos and get_commits functions
+    #print(response.json())  # Add this in your get_repos and get_commits functions
     return commits
 
 # Reste du code...
@@ -136,8 +143,8 @@ def main():
     # Eliminate duplicates
     unique_commiters = deduplicate_commiters(commiters)
     if unique_commiters:
-       pop_valid("Writing the following data to the file")
-       print(unique_commiters)
+       pop_valid("Writing the collected data to file")
+       #print(unique_commiters)
     else:
        pop_err("No data to write to the file.")
 
@@ -152,10 +159,12 @@ def main():
         else:
             # Print to console
             for commiter in unique_commiters:
-                print(f"{commiter['name']}: {commiter['email']}")
+                print(f"Data has been written to {args.outputFile}")
 
-    print(f"Data has been written to {args.outputFile}")
     pop_valid("Data correctly writen to output file ");
 
 if __name__ == '__main__':
+    print("[+]======================================================")
+    print("[+]   Gitmail Harvester v1.0 by @bl4ckarch and @gr0bot    ")
+    print("[+]======================================================")
     main()
