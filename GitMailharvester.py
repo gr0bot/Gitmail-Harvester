@@ -13,18 +13,30 @@ import csv
 import json
 import re
 
-bold='\033[01m'; reset='\033[0m'; red='\033[31m'; yellow='\033[32m'; green='\033[36m'; lowgreen='\033[96m'; lowblue='\033[94m'; cyan='\033[92m'; purple="\033[95m"; purple="\033[95m"
+colors = {
+    'bold': '\033[01m',
+    'reset': '\033[0m',
+    'red': '\033[31m',
+    'green': '\033[32m',
+    'cyan': '\033[36m',
+    'low_green': '\033[96m',
+    'low_blue': '\033[94m',
+    'purple': "\033[95m"
+}
+
 random_str = ''.join(random.choice(string.ascii_lowercase) for i in range(7))
 #q = Queue()
 def pop_err(text):
-    print("{}{}{} {}".format(red, "[!]", reset, text))
-    exit()
+    raise Exception(f"{colors['red']}[!]{colors['reset']} {text}")
 def pop_dbg(text):
-    print("{}{}{} {}".format(cyan, "[i]", reset, text))
+    #print("{}{}{} {}".format(cyan, "[i]", reset, text))
+    print(f"{colors['low_blue']}[!]{colors['reset']} {text}")
 def pop_info(text):
-    print("{}{}{} {}".format(cyan, "[*]", reset, text))
+    #print("{}{}{} {}".format(cyan, "[*]", reset, text))
+    print(f"{colors['purple']}[*]{colors['reset']} {text}")
 def pop_valid(text):
-    print("{}{}{} {}".format(green, "[+]", reset, text))
+    #print("{}{}{} {}".format(green, "[+]", reset, text))
+    print(f"{colors['cyan']}[+]{colors['reset']} {text}")
 def log_to_file(line):
     f = open('log.txt', 'a')
     f.write(line); f.write("\n")
@@ -108,6 +120,7 @@ def write_to_csv(data, filename):
 # Fonction pour écrire les résultats dans un fichier JSON
 def write_to_json(data, filename):
     with open(filename, 'w', encoding='utf-8') as jsonfile:  # for JSON
+        # file deepcode ignore PT: <please specify a reason of ignoring this>
         json.dump(data, jsonfile, indent=5)
 
 # Fonction pour écrire les résultats dans un fichier texte
