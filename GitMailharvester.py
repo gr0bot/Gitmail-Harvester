@@ -90,10 +90,10 @@ def get_commits(service, name, repo_name, token):
     else:
         pop_info("Service not yet functional")
         raise ValueError("Service not supported")
-    #print(response.json())  # Add this in your get_repos and get_commits functions
+   
     return commits
 
-# Reste du code...
+
 
 # Fonction pour écrire les résultats dans un fichier CSV
 def write_to_csv(data, filename):
