@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # File name          : gitmailharvester.py
 # Author             : bl4ckarch & gr0bot
-# Date created       : 
+# Date created       : 6 feb 2024
 
 
 import sys
@@ -26,9 +26,9 @@ def pop_info(text):
 def pop_valid(text):
     print("{}{}{} {}".format(green, "[+]", reset, text))
 def log_to_file(line):
-    #f = open(f'./{output_name}.txt', 'a')
-    #f.write(line); f.write("\n")
-    #f.close()
+    f = open('log.txt', 'a')
+    f.write(line); f.write("\n")
+    f.close()
     pass
 
 
@@ -44,7 +44,7 @@ def get_repos(service, name, entity_type, token):
         
         api_url = f'https://api.github.com/users/{name}/repos' if entity_type == 'user' else f'https://api.github.com/orgs/{name}/repos'
         headers = {'Authorization': f'token {token}'} if token else {}
-        response = requests.get(api_url)
+        response = requests.get(api_url, headers=headers)
         if response.status_code == 403:
             pop_err("API rate limit exceeded. repos")
             return []
@@ -54,10 +54,14 @@ def get_repos(service, name, entity_type, token):
                 repos.append(repo['name'])
     elif service == 'gitlab':
         # Ajoutez la logique pour GitLab ici
+        pop_info("Service gitlab not yet functional")
         pass
     else:
         raise pop_info("Service not supported")
     #print(response.json())  # Add this in your get_repos and get_commits functions
+    log = response.json()
+    formatted_log = json.dumps(log,indent= 5)
+    log_to_file(formatted_log)
     return repos
 
 
@@ -69,7 +73,7 @@ def get_commits(service, name, repo_name, token):
     if service == 'github':
         api_url = f'https://api.github.com/repos/{name}/{repo_name}/commits'
         headers = {'Authorization': f'token {token}'} if token else {}
-        response = requests.get(api_url)
+        response = requests.get(api_url, headers=headers)
         if response.status_code == 403:
             pop_err("API rate limit exceeded. commits")
             return []
@@ -81,6 +85,7 @@ def get_commits(service, name, repo_name, token):
                 commits.append({'name': committer_info['name'], 'email': committer_info['email']})
     elif service == 'gitlab':
         # Ajoutez la logique pour GitLab ici
+        pop_info("Service gitlab not yet functional")
         pass
     else:
         pop_info("Service not yet functional")
@@ -103,7 +108,7 @@ def write_to_csv(data, filename):
 # Fonction pour écrire les résultats dans un fichier JSON
 def write_to_json(data, filename):
     with open(filename, 'w', encoding='utf-8') as jsonfile:  # for JSON
-        json.dump(data, jsonfile, indent=4)
+        json.dump(data, jsonfile, indent=5)
 
 # Fonction pour écrire les résultats dans un fichier texte
 def write_to_txt(data, filename):
