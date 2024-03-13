@@ -54,39 +54,21 @@ def make_api_call(url, headers=None):
             pop_err(f"Failed to access {url} with status code: {response.status_code}")
     except requests.exceptions.RequestException as e:
         pop_err(f"Request failed: {e}")
-    return None
+    return None    
 
-
-
-
-# Fonction pour récupérer les dépôts de l'utilisateur ou de l'organisation
 def get_repos(service, name, entity_type, token):
-    
     repos = []
-    headers = {}    
-    
     if service == 'github':
-        
         api_url = f'https://api.github.com/users/{name}/repos' if entity_type == 'user' else f'https://api.github.com/orgs/{name}/repos'
         headers = {'Authorization': f'token {token}'} if token else {}
-        response = requests.get(api_url, headers=headers)
-        if response.status_code == 403:
-            pop_err("API rate limit exceeded. repos")
-            return []
-        if response.status_code == 200:
-            repos_data = response.json()
+        repos_data = make_api_call(api_url, headers)
+        if repos_data is not None:
             for repo in repos_data:
                 repos.append(repo['name'])
     elif service == 'gitlab':
-        # Ajoutez la logique pour GitLab ici
         pop_info("Service gitlab not yet functional")
-        pass
     else:
-        raise pop_info("Service not supported")
-    #print(response.json())  # Add this in your get_repos and get_commits functions
-    log = response.json()
-    formatted_log = json.dumps(log,indent= 5)
-    log_to_file(formatted_log)
+        pop_info("Service not supported")
     return repos
 
 
@@ -94,29 +76,20 @@ def get_repos(service, name, entity_type, token):
 # Fonction pour récupérer les commits d'un dépôt
 def get_commits(service, name, repo_name, token):
     commits = []
-    headers = {}
     if service == 'github':
         api_url = f'https://api.github.com/repos/{name}/{repo_name}/commits'
         headers = {'Authorization': f'token {token}'} if token else {}
-        response = requests.get(api_url, headers=headers)
-        if response.status_code == 403:
-            pop_err("API rate limit exceeded. commits")
-            return []
-        if response.status_code == 200:
-            commits_data = response.json()
+        commits_data = make_api_call(api_url, headers)
+        if commits_data is not None:
             for commit in commits_data:
-                # Supposons que le commit contient un objet 'commit' qui à son tour contient un objet 'committer'
                 committer_info = commit['commit']['committer']
                 commits.append({'name': committer_info['name'], 'email': committer_info['email']})
     elif service == 'gitlab':
-        # Ajoutez la logique pour GitLab ici
         pop_info("Service gitlab not yet functional")
-        pass
     else:
-        pop_info("Service not yet functional")
-        raise ValueError("Service not supported")
-   
+        pop_info("Service not supported")
     return commits
+
 
 
 
