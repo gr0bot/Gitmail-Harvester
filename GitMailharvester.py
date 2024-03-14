@@ -170,10 +170,6 @@ def main():
 
     # Eliminate duplicates
     unique_commiters = deduplicate_commiters(commiters)
-    if unique_commiters:
-       pop_valid("Writing the collected data to file")
-    else:
-       pop_err("No data to write to the file.")
 
     # Output results to the specified file format
     if args.outputAs == 'csv':
@@ -187,8 +183,12 @@ def main():
         pop_valid("Data correctly writen to output file ");
     else:
         # Print to console
+        print("[+]======================================================\n")
+        print("[+]These are the names and emails")
         for commiter in unique_commiters:
-            print(f"name: {commiter['name']} email: {commiter['email']}")   
+            
+            print(f"{commiter['name']}:{commiter['email']}")
+        print("[+]======================================================\n")   
 
     
 
