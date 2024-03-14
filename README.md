@@ -36,15 +36,14 @@ The tool can be executed from the command line with various options to specify t
 Basic Syntax
 
 ```bash 
-    python GitMailharvester.py [OPTIONS]
+    python3 GitMailharvester.py [OPTIONS]
 ```
 
 Options
 
-    -H, --host: Required. The hosting service (github or gitlab).
-    -u, --username: The username on the host service.
-    -o, --organisation: The organization name on the host service.
-    --list: Specify all to list all committers.
+    -s, --service: Required. The hosting service (github or gitlab).
+    -u, --username: The username on the service.
+    -o, --organisation: The organization name on the  service.
     -oA, --outputAs: The output format (json, csv, txt).
     -oF, --outputFile: Required. The name of the output file (with extension).
     --github-token: The GitHub personal access token for increased rate limits and private repo access.
@@ -56,14 +55,14 @@ Extract all committers from a GitHub user's repositories and output to committer
 
 ```bash
 
-python GitMailharvester.py -H github -u username --list all -oA csv -oF committers.csv --github-token YOUR_GITHUB_TOKEN 
+python GitMailharvester.py -s github -u username  -oA csv -oF committers.txt --github-token YOUR_GITHUB_TOKEN 
 ```
 
 Extract all committers from a GitLab organization's repositories and output to committers.json:
 
 ```bash
 
-python GitMailharvester.py -H gitlab -o organisation_name --list all -oA json -oF committers.json --gitlab-token YOUR_GITLAB_TOKEN
+python GitMailharvester.py -s gitlab -o organisation_name  -oA json -oF committers.json --gitlab-token YOUR_GITLAB_TOKEN
 ```
 ### Notes
 
