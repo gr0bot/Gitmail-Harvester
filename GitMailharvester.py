@@ -13,13 +13,6 @@ import csv
 import json
 import re
 import logging
-
-
-
-
-
-
-
 class CustomColors:
     RED = '\033[31m'
     GREEN = '\033[32m'
@@ -41,7 +34,6 @@ class CustomFormatter(logging.Formatter):
 
     def format(self, record):
         log_fmt = self.format_dict.get(record.levelno)
-        #formatter = logging.Formatter(log_fmt + '%(message)s')
         formatter = logging.Formatter('%(asctime)s ' + log_fmt + '%(message)s', "%Y-%m-%d %H:%M:%S")
         return formatter.format(record)
     
@@ -49,7 +41,6 @@ handler = logging.StreamHandler()
 handler.setFormatter(CustomFormatter())
 logging.basicConfig(level=logging.DEBUG, handlers=[handler])
 
-random_str = ''.join(random.choice(string.ascii_lowercase) for i in range(7))
 def pop_err(text):
     logging.error(text)
     sys.exit()
@@ -112,8 +103,6 @@ def get_commits(service, name, repo_name, token):
     return commits
 
 
-
-
 # Fonction pour écrire les résultats dans un fichier CSV
 def write_to_csv(data, filename):
     
@@ -149,15 +138,14 @@ def main():
         prog='gitmailharvester',
         description='Tool for extracting e-mail addresses from commits in a GitHub or GitLab account.',
         epilog='''
-    Examples:
-    python Gitmailharvester.py --service github --username john_doe --outputFile johns_emails.csv --outputAs csv --github-token yourtokenhere
-    python Gitmailharvester.py --service gitlab --organisation my_org --outputFile org_emails.txt --outputAs txt --gitlab-token yourtokenhere
+            Examples:
+            python Gitmailharvester.py --service github --username john_doe --outputFile johns_emails.csv --outputAs csv --github-token yourtokenhere
+            python Gitmailharvester.py --service gitlab --organisation my_org --outputFile org_emails.txt --outputAs txt --gitlab-token yourtokenhere
 
-    Note: Replace 'yourtokenhere' with your actual GitHub or GitLab personal access token.
-        ''',
-        formatter_class=argparse.RawDescriptionHelpFormatter
+            Note: Replace 'yourtokenhere' with your actual GitHub or GitLab personal access token.
+                ''',
+                formatter_class=argparse.RawDescriptionHelpFormatter
     )
-
     parser.add_argument('-s', '--service', choices=['github', 'gitlab'], required=True, help='service (either "github" or "gitlab").')
     parser.add_argument('-u', '--username', help='Username for the  service. Used to fetch user repositories.')
     parser.add_argument('-o', '--organisation', help='Organisation name for the  service. Used to fetch organisation repositories.')
@@ -184,7 +172,6 @@ def main():
     unique_commiters = deduplicate_commiters(commiters)
     if unique_commiters:
        pop_valid("Writing the collected data to file")
-       #print(unique_commiters)
     else:
        pop_err("No data to write to the file.")
 
@@ -206,4 +193,5 @@ if __name__ == '__main__':
     print("[+]======================================================")
     print("[+]   Gitmail Harvester v1.0 by @bl4ckarch and @gr0bot    ")
     print("[+]======================================================")
+    print("\n")
     main()
