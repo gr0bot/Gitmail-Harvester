@@ -18,26 +18,41 @@ import logging
 
 
 
-logging.basicConfig(filename='gitmailharvester.log',
-                    filemode='a',  # Append mode
-                    format='%(asctime)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
 
-colors = {
-    'bold': '\033[01m',
-    'reset': '\033[0m',
-    'red': '\033[31m',
-    'green': '\033[32m',
-    'cyan': '\033[36m',
-    'low_green': '\033[96m',
-    'low_blue': '\033[94m',
-    'purple': "\033[95m"
-}
+
+class CustomColors:
+    RED = '\033[31m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    CYAN = '\033[36m'
+    RESET = '\033[0m'
+    BOLD = '\033[01m'
+    PURPLE = '\033[95m'
+
+# Custom formatter with color support
+class CustomFormatter(logging.Formatter):
+    format_dict = {
+        logging.DEBUG: CustomColors.CYAN + "[DEBUG] " + CustomColors.RESET,
+        logging.INFO: CustomColors.GREEN + "[INFO] " + CustomColors.RESET,
+        logging.WARNING: CustomColors.YELLOW + "[WARNING] " + CustomColors.RESET,
+        logging.ERROR: CustomColors.RED + "[ERROR] " + CustomColors.RESET,
+        logging.CRITICAL: CustomColors.PURPLE + "[CRITICAL] " + CustomColors.RESET
+    }
+
+    def format(self, record):
+        log_fmt = self.format_dict.get(record.levelno)
+        #formatter = logging.Formatter(log_fmt + '%(message)s')
+        formatter = logging.Formatter('%(asctime)s ' + log_fmt + '%(message)s', "%Y-%m-%d %H:%M:%S")
+        return formatter.format(record)
+    
+handler = logging.StreamHandler()
+handler.setFormatter(CustomFormatter())
+logging.basicConfig(level=logging.DEBUG, handlers=[handler])
 
 random_str = ''.join(random.choice(string.ascii_lowercase) for i in range(7))
 def pop_err(text):
     logging.error(text)
-    exit()
+    sys.exit()
 
 def pop_dbg(text):
     logging.debug(text)
