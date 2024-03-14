@@ -178,16 +178,19 @@ def main():
     # Output results to the specified file format
     if args.outputAs == 'csv':
         write_to_csv(unique_commiters, args.outputFile)
+        pop_valid("Data correctly writen to output file ");
     elif args.outputAs == 'json':
         write_to_json(unique_commiters, args.outputFile)
+        pop_valid("Data correctly writen to output file ");
     elif args.outputAs == 'txt':
         write_to_txt(unique_commiters, args.outputFile)
+        pop_valid("Data correctly writen to output file ");
     else:
         # Print to console
         for commiter in unique_commiters:
-            print(f"Data has been written to {args.outputFile}")
+            print(f"name: {commiter['name']} email: {commiter['email']}")   
 
-    pop_valid("Data correctly writen to output file ");
+    
 
 if __name__ == '__main__':
     print("[+]======================================================")
