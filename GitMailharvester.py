@@ -12,6 +12,16 @@ import requests
 import csv
 import json
 import re
+import logging
+
+
+
+
+
+logging.basicConfig(filename='gitmailharvester.log',
+                    filemode='a',  # Append mode
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
 
 colors = {
     'bold': '\033[01m',
@@ -25,23 +35,19 @@ colors = {
 }
 
 random_str = ''.join(random.choice(string.ascii_lowercase) for i in range(7))
-#q = Queue()
 def pop_err(text):
-    raise Exception(f"{colors['red']}[!]{colors['reset']} {text}")
+    logging.error(text)
+    exit()
+
 def pop_dbg(text):
-    #print("{}{}{} {}".format(cyan, "[i]", reset, text))
-    print(f"{colors['low_blue']}[!]{colors['reset']} {text}")
+    logging.debug(text)
+
 def pop_info(text):
-    #print("{}{}{} {}".format(cyan, "[*]", reset, text))
-    print(f"{colors['purple']}[*]{colors['reset']} {text}")
+    logging.info(text)
+
 def pop_valid(text):
-    #print("{}{}{} {}".format(green, "[+]", reset, text))
-    print(f"{colors['cyan']}[+]{colors['reset']} {text}")
-def log_to_file(line):
-    f = open('log.txt', 'a')
-    f.write(line); f.write("\n")
-    f.close()
-    pass
+    logging.info(text)
+
 
 def make_api_call(url, headers=None):
     try:
@@ -96,7 +102,7 @@ def get_commits(service, name, repo_name, token):
 # Fonction pour écrire les résultats dans un fichier CSV
 def write_to_csv(data, filename):
     
-    with open(filename, 'w', newline='', encoding='utf-8') as csvfile:  # for CSV
+    with open(filename, 'a', newline='', encoding='utf-8') as csvfile:  # for CSV
         fieldnames = ['name', 'email']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
@@ -105,7 +111,7 @@ def write_to_csv(data, filename):
 
 # Fonction pour écrire les résultats dans un fichier JSON
 def write_to_json(data, filename):
-    with open(filename, 'w', encoding='utf-8') as jsonfile:  # for JSON
+    with open(filename, 'a', encoding='utf-8') as jsonfile:  # for JSON
         # file deepcode ignore PT: <please specify a reason of ignoring this>
         json.dump(data, jsonfile, indent=5)
 
@@ -126,7 +132,6 @@ def main():
     parser.add_argument('-H', '--host', choices=['github', 'gitlab'], required=True, help='Host service (github/gitlab)')
     parser.add_argument('-u', '--username', help='Username for the host service')
     parser.add_argument('-o', '--organisation', help='Organisation for the host service')
-    parser.add_argument('-list', '--list', choices=['all'], help='List all commiters')
     parser.add_argument('-oA', '--outputAs', choices=['json', 'csv', 'txt'], help='Output file format')
     parser.add_argument('-oF', '--outputFile', required=True, help='Output file name (with extension)')
     parser.add_argument('-ghT','--github-token', help='GitHub personal access token')
@@ -153,17 +158,16 @@ def main():
        pop_err("No data to write to the file.")
 
     # Output results to the specified file format
-    if args.list == 'all':
-        if args.outputAs == 'csv':
-            write_to_csv(unique_commiters, args.outputFile)
-        elif args.outputAs == 'json':
-            write_to_json(unique_commiters, args.outputFile)
-        elif args.outputAs == 'txt':
-            write_to_txt(unique_commiters, args.outputFile)
-        else:
-            # Print to console
-            for commiter in unique_commiters:
-                print(f"Data has been written to {args.outputFile}")
+    if args.outputAs == 'csv':
+        write_to_csv(unique_commiters, args.outputFile)
+    elif args.outputAs == 'json':
+        write_to_json(unique_commiters, args.outputFile)
+    elif args.outputAs == 'txt':
+        write_to_txt(unique_commiters, args.outputFile)
+    else:
+        # Print to console
+        for commiter in unique_commiters:
+            print(f"Data has been written to {args.outputFile}")
 
     pop_valid("Data correctly writen to output file ");
 
