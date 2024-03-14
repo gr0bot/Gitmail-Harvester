@@ -43,7 +43,7 @@ logging.basicConfig(level=logging.DEBUG, handlers=[handler])
 
 def pop_err(text):
     logging.error(text)
-    sys.exit()
+    
 
 def pop_dbg(text):
     logging.debug(text)
