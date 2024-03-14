@@ -143,26 +143,42 @@ def deduplicate_commiters(commiters):
 
 # Fonction principale qui parse les arguments et appelle les autres fonctions
 def main():
-    parser = argparse.ArgumentParser(prog='tool', description='Description : Tool for extracting e-mail addresses from commits in a GitHub account.', formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-H', '--host', choices=['github', 'gitlab'], required=True, help='Host service (github/gitlab)')
-    parser.add_argument('-u', '--username', help='Username for the host service')
-    parser.add_argument('-o', '--organisation', help='Organisation for the host service')
-    parser.add_argument('-oA', '--outputAs', choices=['json', 'csv', 'txt'], help='Output file format')
-    parser.add_argument('-oF', '--outputFile', required=True, help='Output file name (with extension)')
-    parser.add_argument('-ghT','--github-token', help='GitHub personal access token')
-    parser.add_argument('-glT','--gitlab-token', help='GitLab personal access token')
+    
+
+    parser = argparse.ArgumentParser(
+        prog='gitmailharvester',
+        description='Tool for extracting e-mail addresses from commits in a GitHub or GitLab account.',
+        epilog='''
+    Examples:
+    python Gitmailharvester.py --service github --username john_doe --outputFile johns_emails.csv --outputAs csv --github-token yourtokenhere
+    python Gitmailharvester.py --service gitlab --organisation my_org --outputFile org_emails.txt --outputAs txt --gitlab-token yourtokenhere
+
+    Note: Replace 'yourtokenhere' with your actual GitHub or GitLab personal access token.
+        ''',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+
+    parser.add_argument('-s', '--service', choices=['github', 'gitlab'], required=True, help='service (either "github" or "gitlab").')
+    parser.add_argument('-u', '--username', help='Username for the  service. Used to fetch user repositories.')
+    parser.add_argument('-o', '--organisation', help='Organisation name for the  service. Used to fetch organisation repositories.')
+    parser.add_argument('-oA', '--outputAs', choices=['json', 'csv', 'txt'], help='Output file format. Choose between "json", "csv", and "txt".')
+    parser.add_argument('-oF', '--outputFile', required=True, help='Output file name. Please include the desired extension based on the output format.')
+    parser.add_argument('-ghT', '--github-token', help='GitHub personal access token. Required for accessing private repositories or increasing rate limits.')
+    parser.add_argument('-glT', '--gitlab-token', help='GitLab personal access token. Required for accessing private repositories or increasing rate limits.')
+
     args = parser.parse_args()
+
 
     # Determine if we're looking for a user's or an organisation's repositories
     entity_type = 'user' if args.username else 'org'
     name = args.username or args.organisation
-    token = args.github_token if args.host == 'github' else args.gitlab_token
+    token = args.github_token if args.service == 'github' else args.gitlab_token
     
     # Get the repos and commits
-    repos = get_repos(args.host, name, entity_type,token)
+    repos = get_repos(args.service, name, entity_type,token)
     commiters = []
     for repo in repos:
-        commiters.extend(get_commits(args.host, name, repo,token))
+        commiters.extend(get_commits(args.service, name, repo,token))
 
     # Eliminate duplicates
     unique_commiters = deduplicate_commiters(commiters)
