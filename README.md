@@ -1,6 +1,6 @@
-# Gitmail-Harvester
+# Git Email Harvester
 
-Gitmail-Harvester is a powerful Osint/Pentest tool designed to extract email addresses from commit history in GitHub and GitLab repositories. It provides a convenient way to gather email addresses from public and private repositories of users or organizations, offering support for both GitHub and GitLab platforms.
+Git Email Harvester is a powerful Osint/Red Team and Pentest tool designed to extract email addresses from commit history in GitHub and GitLab repositories. It provides a convenient way to gather email addresses from public and private repositories of users or organizations, offering support for both GitHub and GitLab platforms.
 
 ## Features
 
