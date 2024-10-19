@@ -3,198 +3,314 @@
 # Author             : bl4ckarch & gr0bot
 # Date created       : 6 feb 2024
 
-
 import sys
-import random
-import string
 import argparse
 import requests
 import csv
 import json
-import re
 import logging
-class CustomColors:
-    RED = '\033[31m'
-    GREEN = '\033[32m'
-    YELLOW = '\033[33m'
-    CYAN = '\033[36m'
-    RESET = '\033[0m'
-    BOLD = '\033[01m'
-    PURPLE = '\033[95m'
+import webbrowser
+import os
+import progressbar  # Import the progressbar library
+from rich.console import Console
+from rich.logging import RichHandler
+from rich.text import Text
+import datetime
 
-# Custom formatter with color support
-class CustomFormatter(logging.Formatter):
-    format_dict = {
-        logging.DEBUG: CustomColors.CYAN + "[DEBUG] " + CustomColors.RESET,
-        logging.INFO: CustomColors.GREEN + "[INFO] " + CustomColors.RESET,
-        logging.WARNING: CustomColors.YELLOW + "[WARNING] " + CustomColors.RESET,
-        logging.ERROR: CustomColors.RED + "[ERROR] " + CustomColors.RESET,
-        logging.CRITICAL: CustomColors.PURPLE + "[CRITICAL] " + CustomColors.RESET
-    }
+console = Console()
 
-    def format(self, record):
-        log_fmt = self.format_dict.get(record.levelno)
-        formatter = logging.Formatter('%(asctime)s ' + log_fmt + '%(message)s', "%Y-%m-%d %H:%M:%S")
-        return formatter.format(record)
-    
-handler = logging.StreamHandler()
-handler.setFormatter(CustomFormatter())
-logging.basicConfig(level=logging.DEBUG, handlers=[handler])
+# Set up rich logging handler
+logging.basicConfig(level=logging.INFO, handlers=[RichHandler(rich_tracebacks=True)])
+logger = logging.getLogger()
 
+# Utility functions for logging different types of messages
 def pop_err(text):
-    logging.error(text)
+    logger.error(text)
     sys.exit()
 
 def pop_dbg(text):
-    logging.debug(text)
+    logger.debug(text)
 
 def pop_info(text):
-    logging.info(text)
+    logger.info(text)
 
 def pop_valid(text):
-    logging.info(text)
+    console.print(f"✅ [bold green]{text}[/bold green]")
 
-
-def make_api_call(url, headers=None):
+def make_api_call(url, headers=None, debug=False):
+    if debug:
+        pop_dbg(f"Making request to URL: {url}")
     try:
         response = requests.get(url, headers=headers)
-        if response.status_code == 403:
-            pop_err("API rate limit exceeded.")
+        if response.status_code == 404:
+            pop_err(f"⛔ URL not found: {url}")
+        elif response.status_code == 403:
+            pop_err("⛔ API rate limit exceeded.")
         elif response.status_code == 200:
             return response.json()
         else:
-            pop_err(f"Failed to access {url} with status code: {response.status_code}")
+            pop_err(f"⛔ Failed to access {url} with status code: {response.status_code}")
     except requests.exceptions.RequestException as e:
-        pop_err(f"Request failed: {e}")
-    return None    
+        pop_err(f"⛔ Request failed: {e}")
+    return None
 
-def get_repos(service, name, entity_type, token):
+def get_repos(service, name, entity_type, token, debug=False):
     repos = []
     if service == 'github':
         api_url = f'https://api.github.com/users/{name}/repos' if entity_type == 'user' else f'https://api.github.com/orgs/{name}/repos'
         headers = {'Authorization': f'token {token}'} if token else {}
-        repos_data = make_api_call(api_url, headers)
+        repos_data = make_api_call(api_url, headers, debug)
         if repos_data is not None:
-            for repo in repos_data:
-                repos.append(repo['name'])
-    elif service == 'gitlab':
-        pop_info("Service gitlab not yet functional")
+            # Initialize the progress bar for repositories
+            pop_valid("Fetching repositories...")
+            with progressbar.ProgressBar(max_value=len(repos_data)) as bar:
+                for i, repo in enumerate(repos_data):
+                    repos.append(repo['name'])
+                    bar.update(i + 1)
     else:
-        pop_info("Service not supported")
+        pop_info("⚠️ Service not supported")
     return repos
 
-
-
-# Fonction pour récupérer les commits d'un dépôt
-def get_commits(service, name, repo_name, token):
+# Function to retrieve commits from a repository
+def get_commits(service, name, repo_name, token, debug=False):
     commits = []
     if service == 'github':
         api_url = f'https://api.github.com/repos/{name}/{repo_name}/commits'
         headers = {'Authorization': f'token {token}'} if token else {}
-        commits_data = make_api_call(api_url, headers)
+        commits_data = make_api_call(api_url, headers, debug)
         if commits_data is not None:
-            for commit in commits_data:
-                committer_info = commit['commit']['committer']
-                commits.append({'name': committer_info['name'], 'email': committer_info['email']})
-    elif service == 'gitlab':
-        pop_info("Service gitlab not yet functional")
+            # Initialize progress bar for commits
+            with progressbar.ProgressBar(max_value=len(commits_data)) as bar:
+                for i, commit in enumerate(commits_data):
+                    committer_info = commit['commit']['committer']
+                    commits.append({'name': committer_info['name'], 'email': committer_info['email']})
+                    bar.update(i + 1)
     else:
-        pop_info("Service not supported")
+        pop_info("⚠️ Service not supported")
     return commits
 
-
-# Fonction pour écrire les résultats dans un fichier CSV
+# Function to write results to CSV file
 def write_to_csv(data, filename):
-    
-    with open(filename, 'a', newline='', encoding='utf-8') as csvfile:  # for CSV
+    with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
         fieldnames = ['name', 'email']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for row in data:
             writer.writerow(row)
 
-# Fonction pour écrire les résultats dans un fichier JSON
+# Function to write results to JSON file
 def write_to_json(data, filename):
-    with open(filename, 'a', encoding='utf-8') as jsonfile:  # for JSON
-        # file deepcode ignore PT: <please specify a reason of ignoring this>
-        json.dump(data, jsonfile, indent=5)
+    with open(filename, 'w', encoding='utf-8') as jsonfile:
+        json.dump(data, jsonfile, indent=4)
 
-# Fonction pour écrire les résultats dans un fichier texte
+# Function to write results to a text file
 def write_to_txt(data, filename):
-    with open(filename, 'a') as txtfile:
+    with open(filename, 'w') as txtfile:
         for entry in data:
             txtfile.write(f"{entry['name']}: {entry['email']}\n")
 
+
+
+def create_html(data, filename, entity_name):
+    logo_url = "https://avatars.githubusercontent.com/u/166144105?s=200&v=4"
+    # Get the current date
+    current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    html_content = f"""
+    <html>
+    <head>
+        <title>Emails from {entity_name} repository commits</title>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background-color: #001f3f;  /* Navy blue */
+                color: white;
+                margin: 0;
+                padding: 0;
+            }}
+            .navbar {{
+                background-color: #001f3f;
+                padding: 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                position: fixed;
+                top: 0;
+                width: 100%;
+                z-index: 1000;
+                border-bottom: 2px solid #0074D9;
+            }}
+            .navbar h1 {{
+                margin: 0;
+                color: white;
+            }}
+            .logo {{
+                width: 60px;
+                height: 60px;
+            }}
+            h1 {{
+                text-align: center;
+                padding: 80px 20px 20px 20px;
+                color: white;
+            }}
+            table {{
+                width: 80%;
+                margin: 20px auto;
+                border-collapse: collapse;
+                box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+                margin-top: 60px;
+            }}
+            th, td {{
+                padding: 12px;
+                text-align: left;
+                border-bottom: 1px solid #ddd;
+                color: white;
+            }}
+            th {{
+                background-color: #0074D9;
+            }}
+            tr:nth-child(even) {{
+                background-color: #003366;
+            }}
+            tr:hover {{
+                background-color: #0074D9;
+            }}
+            footer {{
+                text-align: center;
+                padding: 20px;
+                background-color: #001f3f;
+                color: white;
+                position: fixed;
+                width: 100%;
+                bottom: 0;
+            }}
+            .content {{
+                padding-top: 150px;  /* To prevent overlap with the fixed navbar */
+                padding-bottom: 60px; /* Prevent overlap with the footer */
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="navbar">
+            <h1 style="width: 706.233px;padding-top: 19px;">Emails from {entity_name} repository commits</h1>
+            <img src="{logo_url}" alt="Logo" class="logo" style="margin-right: 100px;">
+        </div>
+        <div class="content">
+            <table>
+                <thead>
+                    <tr><th>Name</th><th>Email</th></tr>
+                </thead>
+                <tbody>
+    """
+    for entry in data:
+        html_content += f"<tr><td>{entry['name']}</td><td>{entry['email']}</td></tr>"
+    
+    html_content += f"""
+                </tbody>
+            </table>
+        </div>
+        <footer>
+            Generated by Gitmail Harvester on {current_date}
+        </footer>
+    </body>
+    </html>
+    """
+    
+    # Write the HTML file
+    with open(filename, 'w') as htmlfile:
+        htmlfile.write(html_content)
+    
+    # Get the absolute path of the HTML file
+    abs_path = os.path.abspath(filename)
+    
+    # Open the HTML file in the default web browser
+    webbrowser.open(f'file://{abs_path}')
+
+
+# Deduplicate committers by email
 def deduplicate_commiters(commiters):
-    unique_commiters = {f"{c['email']}": c for c in commiters}.values()
+    unique_commiters = {c['email']: c for c in commiters}.values()
     return list(unique_commiters)
 
-
-# Fonction principale qui parse les arguments et appelle les autres fonctions
+# Main function that parses arguments and calls other functions
 def main():
-    
-
     parser = argparse.ArgumentParser(
         prog='gitmailharvester',
-        description='Tool for extracting e-mail addresses from commits in a GitHub or GitLab account.',
-        epilog='''
-            Examples:
-            python Gitmailharvester.py --service github --username john_doe --outputFile johns_emails.csv --outputAs csv --github-token yourtokenhere
-            python Gitmailharvester.py --service gitlab --organisation my_org --outputFile org_emails.txt --outputAs txt --gitlab-token yourtokenhere
-
-            Note: Replace 'yourtokenhere' with your actual GitHub or GitLab personal access token.
-                ''',
-                formatter_class=argparse.RawDescriptionHelpFormatter
+        description='Tool for extracting e-mail addresses from commits in a GitHub account.',
+        epilog='''Examples:
+            python gitmailharvester.py --service github --username john_doe --organisation my_org --github-token yourtokenhere
+        ''',
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument('-s', '--service', choices=['github', 'gitlab'], required=True, help='service (either "github" or "gitlab").')
-    parser.add_argument('-u', '--username', help='Username for the  service. Used to fetch user repositories.')
-    parser.add_argument('-o', '--organisation', help='Organisation name for the  service. Used to fetch organisation repositories.')
-    parser.add_argument('-oA', '--outputAs', choices=['json', 'csv', 'txt'], help='Output file format. Choose between "json", "csv", and "txt".')
-    parser.add_argument('-oF', '--outputFile', required=True, help='Output file name. Please include the desired extension based on the output format.')
+    parser.add_argument('-s', '--service', choices=['github'], required=True, help='Service (only "github" supported).')
+    parser.add_argument('-u', '--username', help='Username for the service. Used to fetch user repositories.')
+    parser.add_argument('-o', '--organisation', help='Organisation name for the service. Used to fetch organisation repositories.')
     parser.add_argument('-ghT', '--github-token', help='GitHub personal access token. Required for accessing private repositories or increasing rate limits.')
-    parser.add_argument('-glT', '--gitlab-token', help='GitLab personal access token. Required for accessing private repositories or increasing rate limits.')
-
+    parser.add_argument('-d', '--debug', action='store_true', help='Enable debug mode to print all requests.')
+    
     args = parser.parse_args()
 
+    # Adjust logging level based on debug flag
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG, handlers=[RichHandler()])
+    else:
+        logging.basicConfig(level=logging.INFO, handlers=[RichHandler()])
 
-    # Determine if we're looking for a user's or an organisation's repositories
-    entity_type = 'user' if args.username else 'org'
-    name = args.username or args.organisation
-    token = args.github_token if args.service == 'github' else args.gitlab_token
+    # Ensure either username or organisation is provided
+    if not args.username and not args.organisation:
+        pop_err("⛔ Either --username or --organisation must be provided.")
     
-    # Get the repos and commits
-    repos = get_repos(args.service, name, entity_type,token)
+    # Determine entity type (user or org)
+    entity_type = 'user' if args.username else 'org'
+    name = args.username if args.username else args.organisation
+    token = args.github_token
+
+    # Indicate that the search for emails is beginning
+    pop_valid("Now searching for emails...")
+
+    # Get repositories and commits
+    repos = get_repos(args.service, name, entity_type, token, args.debug)
+    if not repos:
+        pop_err(f"⛔ No repositories found for {name}.")
+
     commiters = []
     for repo in repos:
-        commiters.extend(get_commits(args.service, name, repo,token))
+        pop_valid(f"Fetching commits for repository '{repo}'...")
+        commiters.extend(get_commits(args.service, name, repo, token, args.debug))
+
+    if not commiters:
+        pop_err(f"⚠️ No commit data found for {name}.")
 
     # Eliminate duplicates
     unique_commiters = deduplicate_commiters(commiters)
 
-    # Output results to the specified file format
-    if args.outputAs == 'csv':
-        write_to_csv(unique_commiters, args.outputFile)
-        pop_valid("Data correctly writen to output file ");
-    elif args.outputAs == 'json':
-        write_to_json(unique_commiters, args.outputFile)
-        pop_valid("Data correctly writen to output file ");
-    elif args.outputAs == 'txt':
-        write_to_txt(unique_commiters, args.outputFile)
-        pop_valid("Data correctly writen to output file ");
-    else:
-        # Print to console
-        print("[+]======================================================\n")
-        print("[+]These are the names and emails")
-        for commiter in unique_commiters:
-            
-            print(f"{commiter['name']}:{commiter['email']}")
-        print("[+]======================================================\n")   
+    # Output results to all formats
+    output_filename_base = f"{name}_emails"
+    write_to_csv(unique_commiters, f"{output_filename_base}.csv")
+    pop_valid(f"Data written to {output_filename_base}.csv")
 
-    
+    write_to_json(unique_commiters, f"{output_filename_base}.json")
+    pop_valid(f"Data written to {output_filename_base}.json")
+
+    write_to_txt(unique_commiters, f"{output_filename_base}.txt")
+    pop_valid(f"Data written to {output_filename_base}.txt")
+
+    # Create HTML and open in browser
+    create_html(unique_commiters, "output.html", name)
+    pop_valid("HTML report created and opened in browser.")
 
 if __name__ == '__main__':
-    print("[+]======================================================")
-    print("[+]   Gitmail Harvester v1.0 by @bl4ckarch and @gr0bot    ")
-    print("[+]======================================================")
-    print("\n")
+    banner_text = """
+     ██████╗ ██╗████████╗███╗   ███╗ █████╗ ██╗██╗         ██╗  ██╗ █████╗ ██████╗ ██╗   ██╗███████╗███████╗████████╗███████╗██████╗ 
+    ██╔════╝ ██║╚══██╔══╝████╗ ████║██╔══██╗██║██║         ██║  ██║██╔══██╗██╔══██╗██║   ██║██╔════╝██╔════╝╚══██╔══╝██╔════╝██╔══██╗
+    ██║  ███╗██║   ██║   ██╔████╔██║███████║██║██║         ███████║███████║██████╔╝██║   ██║█████╗  ███████╗   ██║   █████╗  ██████╔╝
+    ██║   ██║██║   ██║   ██║╚██╔╝██║██╔══██║██║██║         ██╔══██║██╔══██║██╔══██╗╚██╗ ██╔╝██╔══╝  ╚════██║   ██║   ██╔══╝  ██╔══██╗
+    ╚██████╔╝██║   ██║   ██║ ╚═╝ ██║██║  ██║██║███████╗    ██║  ██║██║  ██║██║  ██║ ╚████╔╝ ███████╗███████║   ██║   ███████╗██║  ██║
+     ╚═════╝ ╚═╝   ╚═╝   ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
+    
+    
+    Made with ❤️  by @gr0bot and @bl4ckarch
+    """
+    console.print(Text(banner_text, style="cyan"))
+    pop_valid("Gitmail Harvester started...")
     main()
