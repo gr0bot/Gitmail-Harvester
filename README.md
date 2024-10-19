@@ -1,20 +1,28 @@
-# Git Email Harvester
+# Gitmail Harvester
 
-Git Email Harvester is a powerful Osint/Red Team and Pentest tool designed to extract email addresses from commit history in GitHub and GitLab repositories. It provides a convenient way to gather email addresses from public and private repositories of users or organizations, offering support for both GitHub and GitLab platforms.
+Gitmail Harvester is a powerful OSINT/Red Team and Pentest tool designed to extract email addresses from commit history in GitHub repositories (GitLab support will be added later). It provides a convenient way to gather email addresses from public  repositories of users or organizations, offering support for the GitHub platform.
+
+
+![demo](img/demo.gif)
+
+
 
 ## Features
 
-- Support for both GitHub and GitLab.
+- Support for GitHub (GitLab functionality will be added later).
 - Ability to extract from both user and organization repositories.
 - Authentication support to increase rate limits and access private repositories.
-- Outputs data in JSON, CSV, or plain text format.
-- Deduplication of committer information to avoid repeated entries.
+- Automatically generates output in JSON, CSV, and plain text formats.
 - Customizable output file naming.
+- Beautiful HTML report.
+
 
 ## Requirements
 
 - Python 3.x
 - Requests library (`pip install requests`)
+- Progressbar library (`pip install progressbar2`)
+- Rich library (`pip install rich`)
 
 ## Installation
 
@@ -24,50 +32,62 @@ Clone this repository to your local machine using:
 git clone https://github.com/gr0bot/Gitmail-Harvester/
 cd Gitmail-Harvester
 ```
+
 Ensure you have Python 3 installed, and then install the required Python packages:
 
 ```bash
-
 pip install -r requirements.txt
 ```
+
 ## Usage
 
-The tool can be executed from the command line with various options to specify the target platform, username or organization, and output format.
-Basic Syntax
+The tool can be executed from the command line with various options to specify the target platform, username or organization.
 
-```bash 
-    python3 GitMailharvester.py [OPTIONS]
+### Basic Syntax
+
+```bash
+python3 GitMailharvester.py [OPTIONS]
 ```
 
-Options
+### Options
 
-    -s, --service: Required. The hosting service (github or gitlab).
-    -u, --username: The username on the service.
-    -o, --organisation: The organization name on the  service.
-    -oA, --outputAs: The output format (json, csv, txt).
-    -oF, --outputFile: Required. The name of the output file (with extension).
-    --github-token: The GitHub personal access token for increased rate limits and private repo access.
-    --gitlab-token: The GitLab personal access token for increased rate limits and private repo access.
+- `-s, --service`: **Required.** The hosting service (currently only `github` is supported).
+- `-u, --username`: The GitHub username for which to fetch repositories.
+- `-o, --organisation`: The GitHub organization for which to fetch repositories.
+- `-ghT, --github-token`: The GitHub personal access token for increased rate limits and private repo access.
+- `-d, --debug`: Enable debug mode to print all requests.
 
 ### Examples
 
-Extract all committers from a GitHub user's repositories and output to committers.csv:
+1. Extract all committers from a GitHub user's repositories and generate output files:
 
 ```bash
-
-python GitMailharvester.py -s github -u username  -oA csv -oF committers.txt --github-token YOUR_GITHUB_TOKEN 
+python GitMailharvester.py -s github -u username -ghT YOUR_GITHUB_TOKEN
 ```
 
-Extract all committers from a GitLab organization's repositories and output to committers.json:
+2. Extract all committers from a GitHub organization's repositories and generate output files:
 
 ```bash
-
-python GitMailharvester.py -s gitlab -o organisation_name  -oA json -oF committers.json --gitlab-token YOUR_GITLAB_TOKEN
+python GitMailharvester.py -s github -o organisation_name -ghT YOUR_GITHUB_TOKEN
 ```
+
+### Output
+
+The tool automatically generates output in the following formats:
+
+- **JSON** (`username_emails.json` or `organisation_emails.json`)
+- **CSV** (`username_emails.csv` or `organisation_emails.csv`)
+- **Plain text** (`username_emails.txt` or `organisation_emails.txt`)
+- **HTML report** 
+
 ### Notes
 
-    Replace YOUR_GITHUB_TOKEN and YOUR_GITLAB_TOKEN with your actual personal access tokens from GitHub and GitLab, respectively.
-    The personal access token is necessary for accessing private repositories and avoiding rate limits on API requests.
+- Replace `YOUR_GITHUB_TOKEN` with your actual personal access token from GitHub.
+- The personal access token is necessary for accessing private repositories and avoiding rate limits on API requests.
+- GitLab support will be added later, so only GitHub is functional for now.
 
+### Progress Tracking
 
+- The tool provides real-time feedback using progress bars for both repository and commit extraction processes.
+- Log messages, such as "Fetching commits for repository 'X'", are shown in green to indicate important steps in the process.
 
